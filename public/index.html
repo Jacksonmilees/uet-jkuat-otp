@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WhatsApp QR Code Scanner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .qr-container {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px dashed #25d366;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        .qr-code {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .loading { background: #fff3cd; color: #856404; }
+        .ready { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover { background: #128c7e; }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 WhatsApp QR Code Scanner</h1>
+        <p>Scan this QR code with your phone's WhatsApp to connect</p>
+        
+        <div id="status" class="status loading">
+            🔄 Loading QR Code...
+        </div>
+        
+        <div class="qr-container">
+            <div id="qrCode" class="qr-code">
+                <p>Loading QR code...</p>
+            </div>
+        </div>
+        
+        <button onclick="refreshQR()">🔄 Refresh QR Code</button>
+        <button onclick="checkStatus()">📊 Check Status</button>
+        
+        <div class="instructions">
+            <h3>📋 Instructions:</h3>
+            <ol>
+                <li>Open WhatsApp on your phone</li>
+                <li>Go to Settings → Linked Devices</li>
+                <li>Tap "Link a Device"</li>
+                <li>Point your camera at the QR code above</li>
+                <li>Wait for the connection to complete</li>
+            </ol>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        let qrRefreshInterval;
+        
+        // Load QR code on page load
+        window.onload = function() {
+            loadQRCode();
+            // Auto-refresh QR code every 30 seconds
+            qrRefreshInterval = setInterval(loadQRCode, 30000);
+        };
+        
+        async function loadQRCode() {
+            try {
+                const response = await fetch('/qr');
+                const data = await response.json();
+                
+                if (data.qrCode) {
+                    document.getElementById('qrCode').innerHTML = 
+                        `<img src="${data.qrCode}" alt="WhatsApp QR Code" style="max-width: 100%;">`;
+                    document.getElementById('status').className = 'status ready';
+                    document.getElementById('status').innerHTML = '✅ QR Code Loaded - Ready to Scan';
+                } else {
+                    document.getElementById('qrCode').innerHTML = 
+                        '<p>❌ QR Code not available</p>';
+                    document.getElementById('status').className = 'status error';
+                    document.getElementById('status').innerHTML = '❌ QR Code not available';
+                }
+            } catch (error) {
+                document.getElementById('qrCode').innerHTML = 
+                    '<p>❌ Error loading QR code</p>';
+                document.getElementById('status').className = 'status error';
+                document.getElementById('status').innerHTML = '❌ Error loading QR code';
+                console.error('Error:', error);
+            }
+        }
+        
+        async function refreshQR() {
+            document.getElementById('status').className = 'status loading';
+            document.getElementById('status').innerHTML = '🔄 Refreshing QR Code...';
+            await loadQRCode();
+        }
+        
+        async function checkStatus() {
+            try {
+                const response = await fetch('/status');
+                const data = await response.json();
+                
+                let statusText = '';
+                if (data.automation && data.automation.isReady) {
+                    statusText = '✅ WhatsApp Connected - Ready to send OTPs!';
+                    document.getElementById('status').className = 'status ready';
+                } else if (data.automation && data.automation.isInitializing) {
+                    statusText = '⏳ Initializing - Please scan QR code';
+                    document.getElementById('status').className = 'status loading';
+                } else {
+                    statusText = '❌ Not ready - Please scan QR code';
+                    document.getElementById('status').className = 'status error';
+                }
+                
+                document.getElementById('status').innerHTML = statusText;
+                document.getElementById('result').innerHTML = 
+                    `<div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 20px;">
+                        <h4>📊 System Status:</h4>
+                        <p><strong>Ready:</strong> ${data.automation?.isReady || false}</p>
+                        <p><strong>Session:</strong> ${data.automation?.sessionStatus || 'unknown'}</p>
+                        <p><strong>Mode:</strong> ${data.automation?.mode || 'unknown'}</p>
+                    </div>`;
+                    
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    '<div style="background: #f8d7da; padding: 15px; border-radius: 5px; margin-top: 20px;">❌ Error checking status</div>';
+            }
+        }
+        
+        // Auto-check status every 10 seconds
+        setInterval(checkStatus, 10000);
+    </script>
+</body>
+</html> 
