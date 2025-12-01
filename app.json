@@ -1,0 +1,39 @@
+{
+  "name": "whatsapp-otp-production",
+  "description": "Production-ready automated WhatsApp OTP system",
+  "repository": "https://github.com/your-username/whatsapp-otp",
+  "logo": "https://node-js-sample.herokuapp.com/node.png",
+  "keywords": ["whatsapp", "otp", "automation", "production"],
+  "buildpacks": [
+    {
+      "url": "https://github.com/heroku/heroku-buildpack-google-chrome"
+    },
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "env": {
+    "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": {
+      "description": "Skip Chromium download for Puppeteer",
+      "value": "true"
+    },
+    "NODE_ENV": {
+      "description": "Environment",
+      "value": "production"
+    },
+    "CHROME_BIN": {
+      "description": "Chrome binary path for Puppeteer",
+      "value": "/app/.apt/usr/bin/google-chrome"
+    },
+    "CHROME_PATH": {
+      "description": "Chrome path for Puppeteer",
+      "value": "/app/.apt/usr/bin/google-chrome"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  }
+} 
