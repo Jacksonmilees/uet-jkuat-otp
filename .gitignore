@@ -1,5 +1,5 @@
 # Dependencies
-# node_modules/  # Commented out for pre-built deployment
+node_modules/
 
 # Runtime data
 pids
